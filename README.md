@@ -1,19 +1,15 @@
-# Usage
-
-# Usage
-
-### Preview
+## Preview
 
 Storybook preview is available at xxxxx
 
-### Installation
+## Installation
 
 - Install peer dependencies
   `npm i -S styled-components@^5.3.5` (and `npm i -D @types/styled-components` if using typescript)
 - Install package
   `npm i -S react-mindmap-visualiser`
 
-### Usage
+## Usage
 
 Define your tree structure to match the exported `TreeNode` type
 ```ts
