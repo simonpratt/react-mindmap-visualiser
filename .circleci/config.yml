@@ -1,0 +1,77 @@
+version: 2.1
+
+executors:
+  build-agent:
+    docker:
+      - image: cimg/node:lts
+    working_directory: /tmp/mindmap
+
+jobs:
+  test:
+    executor: build-agent
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    executor: build-agent
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run build
+      - persist_to_workspace:
+          root: /tmp/mindmap
+          paths:
+            - build
+            - package.json
+
+  publish-beta:
+    executor: build-agent
+    steps:
+      - attach_workspace:
+          at: /tmp/mindmap
+      - run: printf "//`node -p \"require('url').parse(process.env.NPM_REGISTRY_URL || 'https://registry.npmjs.org').host\"`/:_authToken=${NPM_TOKEN}\nregistry=${NPM_REGISTRY_URL:-https://registry.npmjs.org}\n" > .npmrc
+      - run: npm whoami
+      - run: npm publish --access public beta
+
+  publish-latest:
+    executor: build-agent
+    steps:
+      - attach_workspace:
+          at: /tmp/mindmap
+      - run: printf "//`node -p \"require('url').parse(process.env.NPM_REGISTRY_URL || 'https://registry.npmjs.org').host\"`/:_authToken=${NPM_TOKEN}\nregistry=${NPM_REGISTRY_URL:-https://registry.npmjs.org}\n" > .npmrc
+      - run: npm whoami
+      - run: npm publish --access public
+
+workflows:
+  development:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /.+/
+      - build:
+          filters:
+            tags:
+              only: /.+/
+      - publish-beta:
+          requires:
+            - test
+            - build
+          context: npm_publish
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+-.+$/
+      - publish-latest:
+          requires:
+            - test
+            - build
+          context: npm_publish
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/

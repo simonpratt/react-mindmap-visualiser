@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                          /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017','ES2018' or 'ESNEXT'. */
+    "lib": ["dom", "ESNext"],
+    "module": "ESNext",                       /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
+    "jsx": "react",                           /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
+    "declaration": true,                      /* Generates corresponding '.d.ts' file. */
+    "outDir": "./build",                      /* Redirect output structure to the directory. */
+    "strict": true,                           /* Enable all strict type-checking options. */
+    "moduleResolution": "node",               /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+    "typeRoots": [
+      "./node_modules/@types"
+    ],                                        /* List of folders to include type definitions from. */
+    "types": ["react"],               /* Type declaration files to be included in compilation. */
+    "esModuleInterop": true,                  /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "vite.config.ts",
+    "src/**/*.stories.tsx"
+  ]
+}
