@@ -4,7 +4,7 @@ import { CANVAS_SCALE_FACTOR, DEFAULT_FONT } from '../constants/render.constants
 import { debugLog } from '../helpers/debugLog';
 import { findTreeNodeAtCoordinate } from '../helpers/findTreeNodeAtCoordinate';
 import { getTreeAndToggleNodeCollapse } from '../helpers/getTreeAndToggleNodeCollapse';
-import { getTreeLayout, TreeNode, TreeNodeLayout } from '../helpers/getTreeLayout';
+import { getTreeLayout, TreeNode, TreeNodeWithLayout } from '../helpers/getTreeLayout';
 import { getTreeWithSearchTextFilter } from '../helpers/getTreeWithSearchTextFilter';
 import { getVisibleCanvasBounds } from '../helpers/getVisibleBounds';
 import { getWindowPointOnCanvas } from '../helpers/getWindowPointOnCanvas';
@@ -70,7 +70,7 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
   const [context2D, setContext2D] = useState<CanvasRenderingContext2D>();
   const [tree, setTree] = useState<TreeNode>();
-  const [treeLayout, setTreeLayout] = useState<TreeNodeLayout>();
+  const [treeLayout, setTreeLayout] = useState<TreeNodeWithLayout>();
   const [searchValue, setSearchValue] = useState('');
 
   // Instance that is used for drawing to ensure that everything re-renders on window size change
@@ -196,11 +196,11 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
 
   const handleClick = useCallback(
     (x: number, y: number, modifiers: ClickModifiers) => {
-      if (!context2D || !treeLayout || !tree) {
+      if (!drawingInstance || !treeLayout || !tree) {
         return;
       }
 
-      const point = getWindowPointOnCanvas(context2D, x, y);
+      const point = getWindowPointOnCanvas(drawingInstance.context2D, x, y);
       const node = findTreeNodeAtCoordinate(point.x, point.y, treeLayout);
 
       // If no node was clicked, then do nothing
@@ -223,7 +223,7 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
         return;
       }
     },
-    [context2D, treeLayout, tree],
+    [drawingInstance, onNodeClick, treeLayout, tree],
   );
 
   const handlePan = useCallback(
@@ -243,14 +243,14 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
 
       dispatchPan({ x: diffX, y: diffY });
     },
-    [zoom, dispatchPan, dispatchZoom],
+    [zoom, dispatchPan],
   );
 
   const handleScale = useCallback(
     (deltaScale: number) => {
       dispatchZoom({ val: deltaScale });
     },
-    [zoom, dispatchPan, dispatchZoom],
+    [dispatchZoom],
   );
 
   return (

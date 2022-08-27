@@ -8,54 +8,60 @@ import {
 import { getTextBlock } from './getTextBlock';
 import { measureTextBlock } from './measureTextBlock';
 
-export interface TreeNodeLayout {
+export type BlockNodeStyle = 'default' | 'info' | 'success' | 'warn' | 'danger';
+
+export interface TreeNodeDisplay {
+  collapsed?: boolean;
+  block?: boolean;
+  blockStyle?: BlockNodeStyle;
+}
+
+/**
+ * Internal interfaces that don't have child nodes
+ * This allows for extending without conflicting child node types
+ */
+
+interface __TreeNode {
   id: string;
   text: string;
+  display?: TreeNodeDisplay;
+}
+
+interface __TreeNodeWithNodeSize extends __TreeNode {
   lines: string[];
-  nodes: TreeNodeLayout[];
+  width: number;
+  height: number;
+  leafCount: number;
+}
+
+interface __TreeNodeWithTreeSize extends __TreeNodeWithNodeSize {
+  treeHeight: number;
+  treeWidth: number;
+}
+
+interface __TreeNodeWithLayout extends __TreeNodeWithTreeSize {
   x: number;
   y: number;
-  width: number;
-  height: number;
-  treeHeight: number;
-  treeWidth: number;
-  collapsed: boolean;
-  leafCount: number;
-  blockNode: boolean;
 }
 
-export interface TreeNodeHeight {
-  id: string;
-  text: string;
-  lines: string[];
-  nodes: TreeNodeHeight[];
-  width: number;
-  height: number;
-  treeHeight: number;
-  treeWidth: number;
-  collapsed: boolean;
-  leafCount: number;
-  blockNode: boolean;
-}
+/**
+ * Interfaces with child nodes for usage
+ */
 
-export interface TreeNode {
-  id: string;
-  text: string;
+export interface TreeNode extends __TreeNode {
   nodes: TreeNode[];
-  collapsed?: boolean;
-  blockNode?: boolean;
 }
 
-interface TreeNodeExtended {
-  id: string;
-  text: string;
-  lines: string[];
-  nodes: TreeNodeExtended[];
-  width: number;
-  height: number;
-  collapsed: boolean;
-  leafCount: number;
-  blockNode: boolean;
+interface TreeNodeWithNodeSize extends __TreeNodeWithNodeSize {
+  nodes: TreeNodeWithNodeSize[];
+}
+
+export interface TreeNodeWithLayout extends __TreeNodeWithLayout {
+  nodes: TreeNodeWithLayout[];
+}
+
+export interface TreeNodeWithTreeSize extends __TreeNodeWithTreeSize {
+  nodes: TreeNodeWithTreeSize[];
 }
 
 const sum = (numbers: number[]): number => {
@@ -67,7 +73,7 @@ const getExtendedTreeInfo = (
   node: TreeNode,
   maxWidth: number,
   fontSize: number,
-): TreeNodeExtended => {
+): TreeNodeWithNodeSize => {
   const textBlock = getTextBlock(canvas2D, node.text, maxWidth);
   const expandedNodes = node.nodes.map((node) => getExtendedTreeInfo(canvas2D, node, maxWidth, fontSize));
 
@@ -77,16 +83,14 @@ const getExtendedTreeInfo = (
     id: node.id,
     text: node.text,
     lines: textBlock,
-    width: node.blockNode ? size.width + BLOCK_NODE_PADDING * 2 : size.width,
-    height: node.blockNode ? size.height + BLOCK_NODE_PADDING * 2 : size.height,
+    width: node.display?.block ? size.width + BLOCK_NODE_PADDING * 2 : size.width,
+    height: node.display?.block ? size.height + BLOCK_NODE_PADDING * 2 : size.height,
     nodes: expandedNodes,
-    collapsed: node.collapsed ? true : false,
     leafCount: (expandedNodes.length ? 0 : 1) + sum(expandedNodes.map((_node) => _node.leafCount)),
-    blockNode: !!node.blockNode,
   };
 };
 
-const getFullInvisibleHeight = (canvas2D: CanvasRenderingContext2D, node: TreeNodeExtended): number => {
+const getFullInvisibleHeight = (canvas2D: CanvasRenderingContext2D, node: TreeNodeWithNodeSize): number => {
   if (!node.nodes.length) {
     return node.height;
   }
@@ -95,7 +99,7 @@ const getFullInvisibleHeight = (canvas2D: CanvasRenderingContext2D, node: TreeNo
   return sum(nodeHeights) + (node.nodes.length - 1) * VERTICAL_SPACE_BETWEEN_BLOCKS;
 };
 
-const getNodeSizes = (canvas2D: CanvasRenderingContext2D, node: TreeNodeExtended): TreeNodeHeight => {
+const getNodeSizes = (canvas2D: CanvasRenderingContext2D, node: TreeNodeWithNodeSize): TreeNodeWithTreeSize => {
   // If there are no children, then the tree height is the same as our own height
   if (!node.nodes.length) {
     return {
@@ -111,7 +115,7 @@ const getNodeSizes = (canvas2D: CanvasRenderingContext2D, node: TreeNodeExtended
 
   // Special condition
   // If the node is collapsed, we want to use just this nodes height
-  if (node.collapsed) {
+  if (node?.display?.collapsed) {
     return {
       ...node,
       nodes: nodesWithHeight,
@@ -140,10 +144,10 @@ const getNodeSizes = (canvas2D: CanvasRenderingContext2D, node: TreeNodeExtended
 
 const setNodePosition = (
   canvas2D: CanvasRenderingContext2D,
-  node: TreeNodeHeight,
+  node: TreeNodeWithTreeSize,
   x: number,
   y: number,
-): TreeNodeLayout => {
+): TreeNodeWithLayout => {
   // Start the child y above the current y to spread nodes out evenly
   // Add half our hight back on to return to the midpoint
   let nextNodeY = y - node.treeHeight / 2 + node.height / 2;
@@ -167,7 +171,7 @@ const setNodePosition = (
   };
 };
 
-const getNodeLayout = (canvas2D: CanvasRenderingContext2D, node: TreeNodeHeight): TreeNodeLayout => {
+const getNodeLayout = (canvas2D: CanvasRenderingContext2D, node: TreeNodeWithTreeSize): TreeNodeWithLayout => {
   // Add some padding to the node
   const nodeWithPadding = {
     ...node,
@@ -198,11 +202,11 @@ export const getTreeLayout = (
   node: TreeNode,
   maxWidth: number,
   fontSize: number,
-): TreeNodeLayout => {
+): TreeNodeWithLayout => {
   // Set to the default text size
   canvas2D.font = DEFAULT_FONT;
 
-  // Iterate over all nodes in the tree, split into lines, and calculate the width + height of each text block
+  // Iterate over all nodes in the tree, split into lines, and calculate the width + height of each node
   const expanded = getExtendedTreeInfo(canvas2D, node, maxWidth, fontSize);
 
   // First calculate all the tree heights of nodes
