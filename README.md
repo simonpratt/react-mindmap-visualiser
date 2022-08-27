@@ -1,6 +1,6 @@
 ## Preview
 
-Storybook preview is available at xxxxx
+Storybook preview is available at https://react-mindmap-visualiser.pages.dev/
 
 ## Installation
 

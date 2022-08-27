@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useReducer, useState } from 'react';
 import styled from 'styled-components';
 import { CANVAS_SCALE_FACTOR, DEFAULT_FONT } from '../constants/render.constants';
+import { debugLog } from '../helpers/debugLog';
 import { findTreeNodeAtCoordinate } from '../helpers/findTreeNodeAtCoordinate';
 import { getTreeAndToggleNodeCollapse } from '../helpers/getTreeAndToggleNodeCollapse';
 import { getTreeLayout, TreeNode, TreeNodeLayout } from '../helpers/getTreeLayout';
@@ -45,6 +46,13 @@ interface ZoomLevel {
   val: number;
 }
 
+interface CanvasInstance {
+  canvas: HTMLCanvasElement;
+  context2D: CanvasRenderingContext2D;
+  width: number;
+  height: number;
+}
+
 const coordsReducer = (state: MouseCoords, action: MouseCoords) => {
   return {
     x: state.x + action.x,
@@ -59,11 +67,14 @@ const zoomReducer = (state: ZoomLevel, action: ZoomLevel) => {
 };
 
 const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
-  const [context2D, setContext2D] = useState<CanvasRenderingContext2D>();
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
+  const [context2D, setContext2D] = useState<CanvasRenderingContext2D>();
   const [tree, setTree] = useState<TreeNode>();
   const [treeLayout, setTreeLayout] = useState<TreeNodeLayout>();
   const [searchValue, setSearchValue] = useState('');
+
+  // Instance that is used for drawing to ensure that everything re-renders on window size change
+  const [drawingInstance, setDrawingInstance] = useState<CanvasInstance>();
 
   const [coords, dispatchPan] = useReducer(coordsReducer, { x: 0, y: 0 });
   const [zoom, dispatchZoom] = useReducer(zoomReducer, { val: 1 });
@@ -84,9 +95,10 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
    * Search the tree based on the term whenever the term changes
    */
   useEffect(() => {
+    debugLog('Searching tree');
     const pruned = getTreeWithSearchTextFilter(json, searchValue);
     setTree(pruned);
-  }, [searchValue, setTree]);
+  }, [json, searchValue, setTree]);
 
   /**
    * Hook that is responsible for binding to the canvas element, setting initial size, and persisting to state
@@ -95,20 +107,28 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
     (_canvas: HTMLCanvasElement) => {
       if (_canvas !== null) {
         // Set the height of the canvas
-        _canvas.width = windowWidth * CANVAS_SCALE_FACTOR;
-        _canvas.height = windowHeight * CANVAS_SCALE_FACTOR;
+        _canvas.width = window.innerWidth * CANVAS_SCALE_FACTOR;
+        _canvas.height = window.innerHeight * CANVAS_SCALE_FACTOR;
 
         // Set to state
         setCanvas(_canvas);
       }
     },
-    [setCanvas, windowWidth, windowHeight],
+    [setCanvas],
   );
 
   /**
    * Hook that is responsible for getting and configuring the 2d drawing instance
    */
   useEffect(() => {
+    if (!canvas) {
+      return;
+    }
+
+    // Set the dimensions of the canvas
+    canvas.width = windowWidth * CANVAS_SCALE_FACTOR;
+    canvas.height = windowHeight * CANVAS_SCALE_FACTOR;
+
     // Get the context
     const _context2D = canvas?.getContext('2d');
 
@@ -120,9 +140,17 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
     _context2D.font = DEFAULT_FONT;
     _context2D.textBaseline = 'top';
 
-    // Set to state
+    // Set the context
     setContext2D(_context2D);
-  }, [canvas, setContext2D]);
+
+    // Set to state
+    setDrawingInstance({
+      canvas,
+      context2D: _context2D,
+      width: windowWidth,
+      height: windowHeight,
+    });
+  }, [canvas, setContext2D, setDrawingInstance, windowWidth, windowHeight]);
 
   /**
    * Re-evaluate the tree layout whenever the tree or 2d canvas changes
@@ -132,6 +160,7 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
       return;
     }
 
+    debugLog('Laying out tree');
     const _treeLayout = getTreeLayout(context2D, tree, 800, 32);
     setTreeLayout(_treeLayout);
   }, [tree, context2D, setTreeLayout]);
@@ -140,25 +169,27 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
    * Hook to run each time the zoom or pan changes and re-render the tree
    */
   useEffect(() => {
-    if (!canvas || !context2D || !treeLayout) {
+    if (!drawingInstance || !treeLayout) {
       return;
     }
 
+    debugLog('Drawing tree');
+
     // Set transforms
-    context2D.setTransform(1, 0, 0, 1, 0, 0);
-    context2D.scale(zoom.val, zoom.val);
-    context2D.translate(coords.x, coords.y);
+    drawingInstance.context2D.setTransform(1, 0, 0, 1, 0, 0);
+    drawingInstance.context2D.scale(zoom.val, zoom.val);
+    drawingInstance.context2D.translate(coords.x, coords.y);
 
     // Get the visible area and clear
-    const visibleBounds = getVisibleCanvasBounds(context2D);
-    context2D.clearRect(visibleBounds.x, visibleBounds.y, visibleBounds.width, visibleBounds.height);
+    const visibleBounds = getVisibleCanvasBounds(drawingInstance.context2D);
+    drawingInstance.context2D.clearRect(visibleBounds.x, visibleBounds.y, visibleBounds.width, visibleBounds.height);
 
     // Draw a grid for the visible area
-    renderGrid(context2D, visibleBounds.x, visibleBounds.y, visibleBounds.width, visibleBounds.height);
+    renderGrid(drawingInstance.context2D, visibleBounds.x, visibleBounds.y, visibleBounds.width, visibleBounds.height);
 
     // Draw the tree
-    renderTree(context2D, treeLayout, searchValue);
-  }, [context2D, coords, zoom, treeLayout, searchValue]);
+    renderTree(drawingInstance.context2D, treeLayout, searchValue);
+  }, [drawingInstance, coords, zoom, treeLayout, searchValue]);
 
   ///////////////////////////////////
   // All handlers for input events //
