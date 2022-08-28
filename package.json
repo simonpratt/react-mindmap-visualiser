@@ -9,6 +9,10 @@
   "files": [
     "build"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simonpratt/react-mindmap-visualiser.git"
+  },
   "scripts": {
     "start": "start-storybook -p 6006 --no-open",
     "build": "tsc --project tsconfig.package.json",
