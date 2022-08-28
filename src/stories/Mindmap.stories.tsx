@@ -1,6 +1,6 @@
 import { Meta } from '@storybook/react/types-6-0';
 import React from 'react';
-import { Mindmap } from '..';
+import { Mindmap, TreeNode, ClickModifiers, NodeClickActions } from '..';
 import { blockNodesData } from './data/blockNodesData';
 import { collapsedTreeData } from './data/collapsedTreeData';
 import { largerTreeData } from './data/largerTreeData';
@@ -21,6 +21,27 @@ export const BlockNodes = () => {
 
 export const CollapsedNodes = () => {
   return <Mindmap json={collapsedTreeData} />;
+};
+
+export const ClickableNodes = () => {
+  const onClick = (node: TreeNode, modifiers: ClickModifiers, actions: NodeClickActions) => {
+    const modifiersString = Object.entries(modifiers)
+      .filter(([key, val]) => !!val)
+      .map(([key]) => key)
+      .join(',');
+
+    alert(
+      modifiersString.length
+        ? `Node clicked: ${node.text} with modifiers: ${modifiersString}`
+        : `Node clicked: ${node.text}`,
+    );
+    const shouldCollapse = confirm('Collapse node?');
+
+    if (shouldCollapse) {
+      actions.toggleCollapse();
+    }
+  };
+  return <Mindmap json={standardTreeData} onNodeClick={onClick} />;
 };
 
 export const RandomTree = () => {

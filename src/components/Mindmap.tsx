@@ -32,9 +32,13 @@ const InputContainer = styled.div`
   right: 16px;
 `;
 
-interface MindmapProps {
+export interface NodeClickActions {
+  toggleCollapse: () => void;
+}
+
+export interface MindmapProps {
   json: TreeNode;
-  onNodeClick?: (node: TreeNode, modifiers: ClickModifiers) => undefined | 'collapse';
+  onNodeClick?: (node: TreeNode, modifiers: ClickModifiers, actions: NodeClickActions) => void;
 }
 
 interface MouseCoords {
@@ -208,20 +212,19 @@ const Mindmap = ({ json, onNodeClick }: MindmapProps) => {
         return;
       }
 
-      // If there is no handler just collapse
-      if (!onNodeClick) {
+      const toggleCollapseNode = () => {
         const _updatedTree = getTreeAndToggleNodeCollapse(tree, node.id);
         setTree(_updatedTree);
+      };
+
+      // If there is no handler just collapse
+      if (!onNodeClick) {
+        toggleCollapseNode();
         return;
       }
 
       // Call the click handler
-      const clickResult = onNodeClick(node, modifiers);
-      if (clickResult === 'collapse') {
-        const _updatedTree = getTreeAndToggleNodeCollapse(tree, node.id);
-        setTree(_updatedTree);
-        return;
-      }
+      onNodeClick(node, modifiers, { toggleCollapse: toggleCollapseNode });
     },
     [drawingInstance, onNodeClick, treeLayout, tree],
   );
