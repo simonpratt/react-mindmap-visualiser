@@ -1,10 +1,10 @@
 import { SMALL_FONT, SMALL_FONT_SIZE } from '../constants/render.constants';
-import { TreeNodeLayout } from '../helpers/getTreeLayout';
+import { TreeNodeWithLayout } from '../helpers/getTreeLayout';
 
 const HORIZONTAL_PADDING = 6;
 const VERTICAL_PADDING = 4;
 
-export const renderNodeCounter = (canvas2D: CanvasRenderingContext2D, node: TreeNodeLayout) => {
+export const renderNodeCounter = (canvas2D: CanvasRenderingContext2D, node: TreeNodeWithLayout) => {
   // Use the text size as the basis for the counter size
   canvas2D.font = SMALL_FONT;
   const textMeasure = canvas2D.measureText(`${node.leafCount}`);

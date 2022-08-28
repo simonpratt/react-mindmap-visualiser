@@ -1,11 +1,15 @@
-import { TreeNodeLayout } from './getTreeLayout';
+import { TreeNodeWithLayout } from './getTreeLayout';
 import { isCoordinateInRectangle } from './isCoordinateInRectangle';
 
-const isTreNodeAtCoordinate = (x: number, y: number, node: TreeNodeLayout) => {
+const isTreNodeAtCoordinate = (x: number, y: number, node: TreeNodeWithLayout) => {
   return isCoordinateInRectangle(x, y, node.x, node.y, node.width, node.height);
 };
 
-export const findTreeNodeAtCoordinate = (x: number, y: number, tree: TreeNodeLayout): TreeNodeLayout | undefined => {
+export const findTreeNodeAtCoordinate = (
+  x: number,
+  y: number,
+  tree: TreeNodeWithLayout,
+): TreeNodeWithLayout | undefined => {
   // Check current node for match
   if (isTreNodeAtCoordinate(x, y, tree)) {
     return tree;
