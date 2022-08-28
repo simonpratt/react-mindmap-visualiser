@@ -16,7 +16,7 @@ Define your tree structure to match the exported `TreeNode` type
 const tree: TreeNode = {
   id: 'root',
   text: 'Lorem ipsum',
-  blockNode: true,
+  display: { block: true },
   nodes: [
     {
       id: '1',
