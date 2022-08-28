@@ -1,6 +1,6 @@
 {
   "name": "react-mindmap-visualiser",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A react component to visualise and interact with mindmaps",
   "main": "build/index.js",
   "author": "Simon Pratt <19920260+simonpratt@users.noreply.github.com>",
