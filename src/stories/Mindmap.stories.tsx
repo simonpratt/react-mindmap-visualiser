@@ -3,11 +3,16 @@ import React from 'react';
 import { Mindmap } from '..';
 import { blockNodesData } from './data/blockNodesData';
 import { collapsedTreeData } from './data/collapsedTreeData';
+import { largerTreeData } from './data/largerTreeData';
 import { standardTreeData } from './data/standardTreeData';
 import { generateTree } from './generateTree';
 
 export const Standard = () => {
   return <Mindmap json={standardTreeData} />;
+};
+
+export const LargeTree = () => {
+  return <Mindmap json={largerTreeData} />;
 };
 
 export const BlockNodes = () => {

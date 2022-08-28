@@ -13,6 +13,7 @@ export type BlockNodeStyle = 'default' | 'info' | 'success' | 'warn' | 'danger';
 
 export interface TreeNodeDisplay {
   collapsed?: boolean;
+  faded?: boolean;
   block?: boolean;
   blockStyle?: BlockNodeStyle;
 }

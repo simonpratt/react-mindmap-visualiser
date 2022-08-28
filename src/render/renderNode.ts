@@ -7,7 +7,11 @@ import { renderText } from './renderText';
 
 const getTextColor = (display: TreeNodeDisplay) => {
   if (display?.block) {
-    return '191919';
+    return '#191919';
+  }
+
+  if (display?.faded) {
+    return '#adabab';
   }
 
   return '#e2e2e2';
