@@ -25,6 +25,7 @@ jobs:
           paths:
             - build
             - package.json
+            - README.md
 
   publish-beta:
     executor: build-agent
