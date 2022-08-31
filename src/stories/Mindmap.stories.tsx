@@ -5,6 +5,7 @@ import { blockNodesData } from './data/blockNodesData';
 import { collapsedTreeData } from './data/collapsedTreeData';
 import { largerTreeData } from './data/largerTreeData';
 import { standardTreeData } from './data/standardTreeData';
+import { testCaseDataTree } from './data/testCaseTreeData';
 import { generateTree } from './generateTree';
 
 export const Standard = () => {
@@ -42,6 +43,10 @@ export const ClickableNodes = () => {
     }
   };
   return <Mindmap json={standardTreeData} onNodeClick={onClick} />;
+};
+
+export const TestCases = () => {
+  return <Mindmap json={testCaseDataTree} />;
 };
 
 export const RandomTree = () => {
